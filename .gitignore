@@ -1,5 +1,7 @@
 # trained models & data (kept OUT of the repo - see models/README.md)
 models/*.pt
+!models/generator_mnist.pt
+!models/generator_blood.pt
 models/*.onnx
 data/
 medmnist_data/

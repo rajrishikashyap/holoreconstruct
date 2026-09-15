@@ -197,6 +197,15 @@
   }
   .chatbar button:disabled{ opacity:.4; cursor:default; }
 
+
+  .modelsel { display:flex; gap:8px; margin-bottom:14px; }
+  .modelsel button {
+    flex:1; font-family:"IBM Plex Mono",monospace; font-size:12px; cursor:pointer;
+    padding:8px 10px; border-radius:9px; border:1px solid var(--border-strong);
+    background:#fff; color:var(--muted); transition:all .15s;
+  }
+  .modelsel button.active { background:var(--teal); color:#fff; border-color:var(--teal); }
+
 </style>
 </head>
 <body>
@@ -212,6 +221,7 @@
   <div class="grid">
     <section class="card">
       <div class="eyebrow">Input</div>
+        <div class="modelsel" id="modelsel"></div>
       <label class="drop" id="drop">
         <div class="ring"></div>
         <p><strong>Drop an image</strong> or click to browse</p>
@@ -258,7 +268,7 @@
     <section class="card" style="grid-column: 1 / -1;">
       <div class="agent-head">
         <div class="eyebrow" style="margin-bottom:0;">Optical-engineer agent</div>
-        <button class="btn-auto" id="autofocus"> Auto-focus (sweep z)</button>
+        <button class="btn-auto" id="autofocus">⚡ Auto-focus (sweep z)</button>
       </div>
       <div class="chatlog" id="chatlog">
         <div class="bubble bot">Ask me about focus or image quality — e.g. “the reconstruction looks blurry, find a better z”. I can sweep the propagation distance and report the sharpest setting.</div>
@@ -297,7 +307,7 @@ $("run").addEventListener("click", async () => {
   $("run").disabled = true;
   const form = new FormData(); form.append("file", picked);
   try {
-    const res = await fetch(API + "/reconstruct", { method: "POST", body: form });
+    const res = await fetch(API + "/reconstruct" + (currentModel?("?model="+currentModel):""), { method: "POST", body: form });
     if (!res.ok) throw new Error("Server returned " + res.status);
     showResult(await res.json());
   } catch (err) {
@@ -375,6 +385,31 @@ async function askAgent(message){
 chatsend.addEventListener("click", ()=>{ const m=chatinput.value.trim(); if(m){ chatinput.value=""; askAgent(m);} });
 chatinput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ chatsend.click(); } });
 autofocus.addEventListener("click", ()=> askAgent("The reconstruction looks blurry. Sweep the propagation distance z between 0.5 and 1.5 mm and tell me the sharpest z."));
+
+
+// --- model selector ---
+let currentModel = null;
+async function loadModels(){
+  try{
+    const r = await fetch(API+"/models"); const d = await r.json();
+    const box = $("modelsel");
+    if(!d.models || !d.models.length){ box.style.display="none"; return; }
+    currentModel = d.default;
+    box.innerHTML = "";
+    d.models.forEach(m=>{
+      const b=document.createElement("button");
+      b.textContent=m.label; b.title=m.hint||"";
+      if(m.key===currentModel) b.classList.add("active");
+      b.onclick=()=>{ currentModel=m.key;
+        [...box.children].forEach(c=>c.classList.remove("active"));
+        b.classList.add("active");
+        if(m.hint) $("fname").textContent=m.hint;
+      };
+      box.appendChild(b);
+    });
+  }catch(e){ $("modelsel").style.display="none"; }
+}
+loadModels();
 
 </script>
 </body>
