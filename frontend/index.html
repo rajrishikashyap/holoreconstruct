@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light" />
+<title>HoloReconstruct</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --canvas: #F4F6F8;
+    --card: #FFFFFF;
+    --border: #E2E8EC;
+    --border-strong: #CBD6DC;
+    --ink: #0B2733;
+    --muted: #5A737F;
+    --faint: #8A9BA4;
+    --teal: #0E8C9E;
+    --teal-deep: #0A6E7D;
+    --slate: #3E5C6B;
+    --radius: 18px;
+    --shadow: 0 1px 2px rgba(11,39,51,.03), 0 6px 20px rgba(11,39,51,.05);
+    --gap: 20px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  html { background: #F4F6F8 !important; }
+  body {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    background: #F4F6F8 !important;
+    color: var(--ink) !important;
+    line-height: 1.55;
+    padding: 44px 24px 90px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; }
+
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 30px; }
+  .logo {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    background: linear-gradient(140deg, var(--teal), var(--teal-deep));
+    position: relative; box-shadow: 0 2px 8px rgba(14,140,158,.28);
+  }
+  .logo::after {
+    content: ""; position: absolute; inset: 9px;
+    border: 2px solid rgba(255,255,255,.9); border-radius: 50%;
+  }
+  h1 { font-size: 21px; font-weight: 600; letter-spacing: -.015em; }
+  header .sub { font-size: 13.5px; color: var(--muted); margin-top: -2px; }
+
+  .grid { display: grid; gap: var(--gap); grid-template-columns: 1.12fr 1fr; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #FFFFFF !important; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    box-shadow: var(--shadow);
+    opacity: 0; transform: translateY(14px);
+    animation: rise .55s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .card:nth-child(1){animation-delay:.04s} .card:nth-child(2){animation-delay:.12s}
+  .card:nth-child(3){animation-delay:.20s}
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce){ .card{animation:none;opacity:1;transform:none} }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 500;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--faint);
+    margin-bottom: 16px;
+  }
+
+  .drop {
+    border: 1.5px dashed var(--border-strong); border-radius: 14px;
+    padding: 36px 20px; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .drop:hover, .drop.over { border-color: var(--teal); background: #F2FaFb; }
+  .drop .ring {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, rgba(14,140,158,.16), rgba(10,110,125,.07));
+    display: grid; place-items: center;
+  }
+  .drop .ring::after {
+    content: ""; width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(140deg, var(--teal), var(--teal-deep));
+  }
+  .drop p { font-size: 14px; color: var(--muted); }
+  .drop strong { color: var(--ink); font-weight: 600; }
+  .drop .fname { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--teal-deep); }
+  input[type=file] { display: none; }
+
+  .btn {
+    margin-top: 16px; width: 100%; border: none; cursor: pointer;
+    background: linear-gradient(140deg, var(--teal), var(--teal-deep));
+    color: #fff; font-family: inherit; font-size: 15px; font-weight: 600;
+    padding: 13px; border-radius: 11px; letter-spacing: .01em;
+    transition: filter .2s, transform .05s, box-shadow .2s;
+    box-shadow: 0 2px 10px rgba(14,140,158,.22);
+  }
+  .btn:hover { filter: brightness(1.05); box-shadow: 0 4px 16px rgba(14,140,158,.30); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .45; cursor: default; filter: none; box-shadow: none; }
+
+  .big {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 62px; font-weight: 600; letter-spacing: -.02em; line-height: 1;
+    background: linear-gradient(140deg, var(--teal), var(--teal-deep));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .unit { font-family: "IBM Plex Mono", monospace; font-size: 20px; font-weight: 500; color: var(--muted); }
+  .label { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .submetrics { display: flex; gap: 10px; margin-top: 22px; }
+  .sm { flex: 1; background: #F4F6F8 !important; border: 1px solid var(--border); border-radius: 12px; padding: 13px 14px; }
+  .sm .v { font-family: "IBM Plex Mono", monospace; font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+  .sm .k {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 500;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--faint); margin-top: 3px;
+  }
+
+  .compare {
+    position: relative; border-radius: 12px; overflow: hidden;
+    aspect-ratio: 1; background: #0B2733; user-select: none;
+    image-rendering: pixelated;
+  }
+  .compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .compare .top { clip-path: inset(0 0 0 var(--split, 50%)); }
+  .compare .handle {
+    position: absolute; top: 0; bottom: 0; left: var(--split, 50%);
+    width: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(11,39,51,.2); cursor: ew-resize;
+  }
+  .compare .handle::after {
+    content: "\2039 \203A"; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 34px; height: 34px; background: #fff; border-radius: 50%; box-shadow: var(--shadow);
+    display: grid; place-items: center; font-size: 13px; color: var(--slate); letter-spacing: 1px;
+  }
+  .compare .tag {
+    position: absolute; bottom: 10px; font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px; font-weight: 500; letter-spacing: .05em;
+    color: #fff; background: rgba(11,39,51,.6); padding: 4px 10px; border-radius: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .compare .tag.l { left: 10px; } .compare .tag.r { right: 10px; }
+
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 44px 0; }
+  .spinner {
+    width: 26px; height: 26px; border: 3px solid var(--border);
+    border-top-color: var(--teal); border-radius: 50%; margin: 34px auto;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .thumbs { display: flex; gap: 12px; margin-top: 12px; }
+  .thumb { flex: 1; }
+  .thumb img {
+    width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px;
+    background: #0B2733; image-rendering: pixelated; border: 1px solid var(--border);
+  }
+  .thumb span {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .04em;
+    color: var(--faint); display: block; margin-top: 7px;
+  }
+  .note { font-size: 12px; color: var(--faint); margin-top: 20px; line-height: 1.6; }
+
+  /* agent panel */
+  .agent-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .btn-auto {
+    border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600;
+    background:linear-gradient(140deg,var(--teal),var(--teal-deep)); color:#fff;
+    padding:9px 16px; border-radius:10px; box-shadow:0 2px 8px rgba(14,140,158,.22);
+    transition:filter .2s, transform .05s;
+  }
+  .btn-auto:hover{ filter:brightness(1.06); } .btn-auto:active{ transform:translateY(1px); }
+  .btn-auto:disabled{ opacity:.45; cursor:default; }
+  .chatlog { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; min-height:20px; }
+  .bubble {
+    max-width:88%; padding:11px 14px; border-radius:12px; font-size:14px; line-height:1.5;
+  }
+  .bubble.user { align-self:flex-end; background:var(--teal); color:#fff; border-bottom-right-radius:4px; }
+  .bubble.bot { align-self:flex-start; background:var(--canvas); border:1px solid var(--border); border-bottom-left-radius:4px; }
+  .trace {
+    align-self:flex-start; max-width:88%; font-family:"IBM Plex Mono",monospace; font-size:11px;
+    color:var(--slate); background:#F0F5F7; border:1px solid var(--border); border-radius:10px;
+    padding:8px 11px; white-space:pre-wrap; word-break:break-word;
+  }
+  .trace b { color:var(--teal-deep); }
+  .chatbar { display:flex; gap:8px; }
+  .chatbar input {
+    flex:1; font-family:inherit; font-size:14px; padding:11px 13px; border-radius:10px;
+    border:1px solid var(--border-strong); background:#fff; color:var(--ink); outline:none;
+  }
+  .chatbar input:focus{ border-color:var(--teal); }
+  .chatbar button {
+    border:none; cursor:pointer; font-family:inherit; font-weight:600; font-size:14px;
+    background:var(--ink); color:#fff; padding:0 18px; border-radius:10px;
+  }
+  .chatbar button:disabled{ opacity:.4; cursor:default; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"></div>
+    <div>
+      <h1>HoloReconstruct</h1>
+      <div class="sub">Physics-informed hologram reconstruction</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <div class="eyebrow">Input</div>
+      <label class="drop" id="drop">
+        <div class="ring"></div>
+        <p><strong>Drop an image</strong> or click to browse</p>
+        <p class="fname" id="fname">a single MNIST-style digit works best</p>
+        <input type="file" id="file" accept="image/*" />
+      </label>
+      <button class="btn" id="run" disabled>Reconstruct</button>
+    </section>
+
+    <section class="card">
+      <div class="eyebrow">Reconstruction quality</div>
+      <div>
+        <span class="big" id="psnr">&mdash;</span>
+        <span class="unit" id="psnrUnit"></span>
+      </div>
+      <div class="label" id="psnrLabel">Upload an image to begin</div>
+      <div class="submetrics">
+        <div class="sm"><div class="v" id="ssim">&mdash;</div><div class="k">SSIM</div></div>
+        <div class="sm"><div class="v" id="dev">&mdash;</div><div class="k">Device</div></div>
+        <div class="sm"><div class="v" id="size">&mdash;</div><div class="k">Res</div></div>
+      </div>
+    </section>
+
+    <section class="card" style="grid-column: 1 / -1;">
+      <div class="eyebrow">Hologram &rarr; Reconstruction</div>
+      <div id="stage">
+        <div class="empty" id="empty">Your result appears here. Drag the divider to compare hologram vs. reconstruction.</div>
+        <div class="spinner" id="spin" style="display:none;"></div>
+        <div class="compare" id="compare" style="display:none;">
+          <img class="bottom" id="imgRecon" alt="reconstruction" />
+          <img class="top" id="imgHolo" alt="hologram" />
+          <div class="handle" id="handle"></div>
+          <span class="tag l">HOLOGRAM</span>
+          <span class="tag r">RECONSTRUCTION</span>
+        </div>
+      </div>
+      <div class="thumbs" id="thumbs" style="display:none;">
+        <div class="thumb"><img id="tInput" alt="input" /><span>ORIGINAL</span></div>
+        <div class="thumb"><img id="tHolo" alt="holo" /><span>SYNTHETIC HOLOGRAM</span></div>
+        <div class="thumb"><img id="tRecon" alt="recon" /><span>RECONSTRUCTED</span></div>
+      </div>
+      <p class="note" id="note"></p>
+    </section>
+    <section class="card" style="grid-column: 1 / -1;">
+      <div class="agent-head">
+        <div class="eyebrow" style="margin-bottom:0;">Optical-engineer agent</div>
+        <button class="btn-auto" id="autofocus"> Auto-focus (sweep z)</button>
+      </div>
+      <div class="chatlog" id="chatlog">
+        <div class="bubble bot">Ask me about focus or image quality — e.g. “the reconstruction looks blurry, find a better z”. I can sweep the propagation distance and report the sharpest setting.</div>
+      </div>
+      <div class="chatbar">
+        <input id="chatinput" type="text" placeholder="Ask the agent…" />
+        <button id="chatsend">Send</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const API = location.origin;
+const REF_PSNR = 39.3, REF_SSIM = 0.996;
+const $ = id => document.getElementById(id);
+let picked = null;
+
+const drop = $("drop"), fileInput = $("file");
+fileInput.addEventListener("change", e => setFile(e.target.files[0]));
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", e => {
+  e.preventDefault(); drop.classList.remove("over");
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+});
+function setFile(f) {
+  if (!f) return;
+  picked = f; $("fname").textContent = f.name; $("run").disabled = false;
+}
+
+$("run").addEventListener("click", async () => {
+  if (!picked) return;
+  $("empty").style.display = "none"; $("compare").style.display = "none";
+  $("thumbs").style.display = "none"; $("spin").style.display = "block";
+  $("run").disabled = true;
+  const form = new FormData(); form.append("file", picked);
+  try {
+    const res = await fetch(API + "/reconstruct", { method: "POST", body: form });
+    if (!res.ok) throw new Error("Server returned " + res.status);
+    showResult(await res.json());
+  } catch (err) {
+    $("spin").style.display = "none"; $("empty").style.display = "block";
+    $("empty").textContent = "Couldn't reach the model. Is the server running? (" + err.message + ")";
+  } finally { $("run").disabled = false; }
+});
+
+function showResult(d) {
+  $("spin").style.display = "none";
+  $("imgHolo").src = d.hologram; $("imgRecon").src = d.reconstruction;
+  $("compare").style.display = "block";
+  $("tInput").src = d.input; $("tHolo").src = d.hologram; $("tRecon").src = d.reconstruction;
+  $("thumbs").style.display = "flex";
+  $("dev").textContent = (d.meta.device || "cpu").toUpperCase();
+  $("size").textContent = d.meta.size + "\u00B2";
+  $("psnrUnit").textContent = "dB";
+  countUp($("psnr"), REF_PSNR, 1); countUp($("ssim"), REF_SSIM, 3);
+  $("psnrLabel").textContent = "Model average on held-out test set";
+  $("note").textContent =
+    "Reference metrics from evaluation on 10,000 held-out test images. The uploaded " +
+    "image is converted to a synthetic hologram via the Angular Spectrum Method, then " +
+    "reconstructed by the trained network.";
+}
+
+function countUp(el, target, dec) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    el.textContent = target.toFixed(dec); return;
+  }
+  const dur = 900, t0 = performance.now();
+  (function tick(t){
+    const p = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-p,3);
+    el.textContent = (target*e).toFixed(dec);
+    if (p<1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+
+const compare = $("compare"), handle = $("handle");
+let dragging = false;
+function setSplit(x){
+  const r = compare.getBoundingClientRect();
+  let pct = Math.max(0, Math.min(100, ((x-r.left)/r.width)*100));
+  compare.style.setProperty("--split", pct + "%");
+}
+handle.addEventListener("pointerdown", () => dragging = true);
+window.addEventListener("pointerup", () => dragging = false);
+window.addEventListener("pointermove", e => { if (dragging) setSplit(e.clientX); });
+compare.addEventListener("click", e => setSplit(e.clientX));
+
+// --- agent panel ---
+const chatlog = $("chatlog"), chatinput = $("chatinput"), chatsend = $("chatsend"), autofocus = $("autofocus");
+function addBubble(cls, text){ const d=document.createElement("div"); d.className="bubble "+cls; d.textContent=text; chatlog.appendChild(d); chatlog.scrollTop=chatlog.scrollHeight; return d; }
+function addTrace(entry){
+  const d=document.createElement("div"); d.className="trace";
+  const args=JSON.stringify(entry.args); let res=entry.result;
+  if(res && res.best_z_mm!==undefined){ res="best z = "+res.best_z_mm+" mm ("+(res.readings?res.readings.length:"?")+" points)"; }
+  else { res=typeof res==="object"?JSON.stringify(res):String(res); if(res.length>140)res=res.slice(0,140)+"…"; }
+  d.innerHTML="<b>→ "+entry.tool+"</b>("+args+")\n   "+res;
+  chatlog.appendChild(d); chatlog.scrollTop=chatlog.scrollHeight;
+}
+async function askAgent(message){
+  addBubble("user", message);
+  const thinking = addBubble("bot", "thinking…");
+  chatsend.disabled=true; autofocus.disabled=true; chatinput.disabled=true;
+  try{
+    const res = await fetch(API+"/agent",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message})});
+    const d = await res.json();
+    thinking.remove();
+    if(d.trajectory) d.trajectory.forEach(addTrace);
+    if(d.ok){ addBubble("bot", d.answer || "(no answer)"); }
+    else { addBubble("bot", "⚠ "+(d.error||"agent error")); }
+  }catch(err){ thinking.remove(); addBubble("bot","⚠ Couldn't reach the agent ("+err.message+")"); }
+  finally{ chatsend.disabled=false; autofocus.disabled=false; chatinput.disabled=false; chatinput.focus(); }
+}
+chatsend.addEventListener("click", ()=>{ const m=chatinput.value.trim(); if(m){ chatinput.value=""; askAgent(m);} });
+chatinput.addEventListener("keydown", e=>{ if(e.key==="Enter"){ chatsend.click(); } });
+autofocus.addEventListener("click", ()=> askAgent("The reconstruction looks blurry. Sweep the propagation distance z between 0.5 and 1.5 mm and tell me the sharpest z."));
+
+</script>
+</body>
+</html>

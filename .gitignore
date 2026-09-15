@@ -1,0 +1,32 @@
+# trained models & data (kept OUT of the repo - see models/README.md)
+models/*.pt
+models/*.onnx
+data/
+medmnist_data/
+*.npz
+
+# training artifacts
+holorecon/
+holorecon_blood/
+runs/
+*.png
+!frontend/**/*.png
+!docs/**/*.png
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# keep these placeholders
+!models/README.md

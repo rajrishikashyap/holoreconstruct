@@ -1,0 +1,27 @@
+# HoloReconstruct - dependencies
+# torch: install the build for your setup. GPU (CUDA):
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# CPU only: pip install torch torchvision
+torch
+torchvision
+numpy
+pillow
+
+# backend + serving
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+
+# training / evaluation
+scikit-image
+tensorboard
+
+# datasets
+medmnist
+
+# agent (local LLM via Ollama)
+ollama
+langgraph
+langchain-ollama
+langchain-core
