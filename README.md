@@ -8,6 +8,10 @@ dashboard and a local LLM agent.
 Built end to end on free, open-source tools and consumer hardware (GTX 1650 +
 free Colab T4). No paid APIs anywhere.
 
+![Blood cell reconstruction: top row is ground truth, bottom row is reconstructed from noisy holograms](docs/cell_reconstruction.png)
+
+*Real blood cells (top) and their reconstructions from noisy holograms (bottom). The network recovers nucleus shape, cell boundary, and type from hologram noise at 0.89 SSIM.*
+
 ## The problem
 
 To image something tiny and transparent (a living cell, a microplastic, a chip
